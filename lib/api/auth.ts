@@ -8,6 +8,44 @@ type AuthedClient = {
   user: User;
 };
 
+export type AppRole = "student" | "admin";
+
+function isAppRole(role: unknown): role is AppRole {
+  return role === "admin" || role === "student";
+}
+
+export async function getCurrentRole(
+  auth?: AuthedClient,
+): Promise<AppRole | null> {
+  const supabase = auth?.supabase ?? (await createClient());
+  let userId = auth?.user.id;
+
+  if (!userId) {
+    const { data, error } = await supabase.auth.getUser();
+
+    if (error || !data.user) {
+      return null;
+    }
+
+    userId = data.user.id;
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (profileError) {
+    console.error("profile lookup failed", profileError.code);
+    throw new HttpError(500, "Could not verify permissions");
+  }
+
+  const role = profile?.role;
+
+  return isAppRole(role) ? role : null;
+}
+
 export async function requireUser(): Promise<AuthedClient> {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getUser();
@@ -21,18 +59,9 @@ export async function requireUser(): Promise<AuthedClient> {
 
 export async function requireAdmin(): Promise<AuthedClient> {
   const auth = await requireUser();
-  const { data, error } = await auth.supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", auth.user.id)
-    .maybeSingle();
+  const role = await getCurrentRole(auth);
 
-  if (error) {
-    console.error("profile lookup failed", error.code);
-    throw new HttpError(500, "Could not verify permissions");
-  }
-
-  if (data?.role !== "admin") {
+  if (role !== "admin") {
     throw new HttpError(403, "Admin access required");
   }
 

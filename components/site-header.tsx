@@ -9,7 +9,7 @@ import { hasEnvVars } from "@/lib/utils";
 export function SiteHeader() {
   return (
     <header className="w-full border-b">
-      <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-5">
+      <div className="flex h-16 w-full items-center justify-between px-5">
         <Link href="/" className="font-semibold">
           Consultations
         </Link>
