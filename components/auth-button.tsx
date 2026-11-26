@@ -6,14 +6,14 @@ import { LogoutButton } from "./logout-button";
 export async function AuthButton() {
   const supabase = await createClient();
 
-  // You can also use getUser() which will be slower.
+  // Reads the session from the cookie. getUser() would call Auth on every render.
   const { data } = await supabase.auth.getClaims();
 
   const user = data?.claims;
 
   return user ? (
     <div className="flex items-center gap-4">
-      Hey, {user.email}!
+      <span className="text-sm">{user.email}</span>
       <LogoutButton />
     </div>
   ) : (
