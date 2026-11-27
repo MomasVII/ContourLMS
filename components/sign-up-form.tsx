@@ -1,5 +1,6 @@
 "use client";
 
+import { passwordIssue } from "@/lib/password";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,14 @@ export function SignUpForm({
     const supabase = createClient();
     setIsLoading(true);
     setError(null);
+
+    const weak = passwordIssue(password);
+
+    if (weak) {
+      setError(weak);
+      setIsLoading(false);
+      return;
+    }
 
     if (password !== repeatPassword) {
       setError("Passwords do not match");
@@ -116,6 +125,7 @@ export function SignUpForm({
                   id="password"
                   type="password"
                   required
+                  minLength={8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />

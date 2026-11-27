@@ -1,5 +1,6 @@
 "use client";
 
+import { passwordIssue } from "@/lib/password";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,14 @@ export function UpdatePasswordForm({
     setIsLoading(true);
     setError(null);
 
+    const weak = passwordIssue(password);
+
+    if (weak) {
+      setError(weak);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
@@ -60,6 +69,7 @@ export function UpdatePasswordForm({
                 <Input
                   id="password"
                   type="password"
+                  minLength={8}
                   placeholder="New password"
                   required
                   value={password}
