@@ -65,6 +65,8 @@ export async function listConsultations(
   let request = supabase
     .from("consultations")
     .select(CONSULTATION_COLUMNS, { count: "exact" })
+    // scheduled, then completed, then cancelled, then earliest time.
+    .order("status", { ascending: false })
     .order("scheduled_at", { ascending: true })
     .order("id", { ascending: true })
     .range(query.offset, query.offset + query.limit - 1);
@@ -92,6 +94,37 @@ export async function listConsultations(
     consultations: data.map((row) => oneConsultation(row)),
     count: count ?? 0,
   };
+}
+
+export async function countConsultations(
+  supabase: SupabaseClient,
+  scope: { studentId: string } | { all: true },
+): Promise<{ scheduled: number; completed: number; cancelled: number }> {
+  const counts = { scheduled: 0, completed: 0, cancelled: 0 };
+
+  await Promise.all(
+    (["scheduled", "completed", "cancelled"] as const).map(async (status) => {
+      let request = supabase
+        .from("consultations")
+        .select("id", { count: "exact", head: true })
+        .eq("status", status);
+
+      if ("studentId" in scope) {
+        request = request.eq("student_id", scope.studentId);
+      }
+
+      const { count, error } = await request;
+
+      if (error) {
+        console.error("consultation count failed", error.code, error.message);
+        throw new HttpError(500, "Could not load consultations");
+      }
+
+      counts[status] = count ?? 0;
+    }),
+  );
+
+  return counts;
 }
 
 export async function getOwnConsultation(
@@ -155,7 +188,7 @@ export async function updateOwnConsultation(
   const patch: {
     reason?: string;
     scheduled_at?: string;
-    status?: "cancelled" | "completed";
+    status?: "cancelled";
   } = {};
 
   if (input.reason !== undefined) {
@@ -188,6 +221,29 @@ export async function updateOwnConsultation(
       409,
       "This consultation was updated. Refresh and try again.",
     );
+  }
+
+  return oneConsultation(data);
+}
+
+export async function completeConsultation(
+  supabase: SupabaseClient,
+  id: string,
+): Promise<Consultation> {
+  const { data, error } = await supabase
+    .from("consultations")
+    .update({ status: "completed" })
+    .eq("id", id)
+    .eq("status", "scheduled")
+    .select(CONSULTATION_COLUMNS)
+    .maybeSingle();
+
+  if (error) {
+    throw mapWriteError(error);
+  }
+
+  if (!data) {
+    throw new HttpError(409, "Only scheduled consultations can be changed");
   }
 
   return oneConsultation(data);

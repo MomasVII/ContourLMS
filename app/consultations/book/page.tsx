@@ -1,6 +1,7 @@
 "use client";
 
 import Button from "@mui/material/Button";
+import axios from "axios";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
@@ -37,19 +38,10 @@ export default function BookConsultationPage() {
     setMessage(null);
 
     try {
-      const response = await fetch("/api/consultations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          reason,
-          scheduledAt: time.toISOString(),
-        }),
+      await axios.post("/api/consultations", {
+        reason,
+        scheduledAt: time.toISOString(),
       });
-
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(payload?.error ?? "Could not book the consultation");
-      }
 
       setReason("");
       setWhen("");
@@ -57,7 +49,10 @@ export default function BookConsultationPage() {
       router.push("/");
       router.refresh();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not book the consultation");
+      const message = axios.isAxiosError(error)
+        ? (error.response?.data as { error?: string } | undefined)?.error
+        : undefined;
+      setMessage(message ?? "Could not book the consultation");
     } finally {
       setPending(false);
     }
