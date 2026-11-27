@@ -51,6 +51,14 @@ The hosted database gets its tables from the same migration files, with `supabas
 - Students cannot mark a consultation complete. Admins keep that control because a student cannot be trusted to close their own consultation.
 - Sign-up creates a student. The Admin checkbox is only there for testing and would not exist in production.
 - The name is collected on sign-up and stored on the profile. Booking does not ask for it again.
+- Profiles and consultations are separate tables. A consultation stores the student, the reason, the time, and the status. The name and email stay on the profile.
+- `role` is text, only `student` or `admin`, and defaults to `student`. The update grant does not include that column, so a signed-in person cannot change their own role.
+- `scheduled_at` is `timestamptz`, so the time is stored as a UTC instant rather than a plain timestamp or text.
+- Status is `scheduled`, `completed`, or `cancelled`. Cancelling keeps the row so the history stays.
+- A student can have only one scheduled consultation at the same time. Completed and cancelled rows do not block that time. A single slot for every student was left out, because that would assume one shared consultant.
+- The future-time rule is a trigger. A check constraint cannot call `now()`. Changing the status does not recheck the time, so a past consultation can still be cancelled.
+- Deleting a login account deletes the profile and, through that, that person's consultations.
+- Email is copied onto the profile so an admin can show it. The app is not granted an update on that column.
 
 ### Contemplations
 
