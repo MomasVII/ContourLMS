@@ -1,6 +1,7 @@
 "use client";
 
 import type { ConsultationStatus } from "@/lib/consultations/types";
+import axios from "axios";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Dialog from "@mui/material/Dialog";
@@ -12,6 +13,7 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import MuiLink from "@mui/material/Link";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -23,6 +25,8 @@ export type DashboardConsultation = {
   scheduledAt: string;
   whenLabel: string;
   status: ConsultationStatus;
+  studentName?: string;
+  studentEmail?: string;
 };
 
 const statusBorder = {
@@ -53,28 +57,34 @@ function bySchedule(consultations: DashboardConsultation[]) {
 }
 
 async function updateConsultation(id: string, body: Record<string, string>) {
-  const response = await fetch(`/api/consultations/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-  if (response.ok) {
-    return;
+  try {
+    await axios.patch(`/api/consultations/${id}`, body);
+  } catch (error) {
+    const message = axios.isAxiosError(error)
+      ? (error.response?.data as { error?: string } | undefined)?.error
+      : undefined;
+    throw new Error(message ?? "Could not update the consultation");
   }
+}
 
-  const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-  throw new Error(payload?.error ?? "Could not update the consultation");
+function pageHref(page: number) {
+  return page <= 1 ? "/" : `/?page=${page}`;
 }
 
 export function LearningDashboard({
   role,
   firstName,
   consultations,
+  counts,
+  page,
+  pageCount,
 }: {
   role: (typeof Roles)[number];
   firstName: string;
   consultations: DashboardConsultation[];
+  counts: { upcoming: number; completed: number; cancelled: number };
+  page: number;
+  pageCount: number;
 }) {
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -84,9 +94,6 @@ export function LearningDashboard({
   const [rescheduleError, setRescheduleError] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<DashboardConsultation | null>(null);
   const items = bySchedule(consultations);
-  const upcoming = consultations.filter((item) => item.status === "scheduled").length;
-  const completed = consultations.filter((item) => item.status === "completed").length;
-  const cancelled = consultations.filter((item) => item.status === "cancelled").length;
   const welcome = firstName ? `Welcome back, ${firstName}` : "Welcome back";
 
   // This function is used to update the consultation status.
@@ -129,9 +136,9 @@ export function LearningDashboard({
 
       <Stack direction="row" sx={{ my: 3 }}>
         {[
-          { value: upcoming, label: "Upcoming" },
-          { value: completed, label: "Completed" },
-          { value: cancelled, label: "Cancelled" },
+          { value: counts.upcoming, label: "Upcoming" },
+          { value: counts.completed, label: "Completed" },
+          { value: counts.cancelled, label: "Cancelled" },
         ].map((stat) => (
           <Stack key={stat.label} spacing={0.5} sx={{ flex: 1, alignItems: "center" }}>
             <Typography variant="h4" component="p">
@@ -180,23 +187,45 @@ export function LearningDashboard({
                   size="small"
                 />
               </Stack>
+              {role === "admin" && (item.studentName || item.studentEmail) ? (
+                <Stack spacing={0.25} sx={{ mt: 1 }}>
+                  {item.studentName ? (
+                    <Typography variant="body2">{item.studentName}</Typography>
+                  ) : null}
+                  {item.studentEmail ? (
+                    <MuiLink
+                      href={`mailto:${encodeURIComponent(item.studentEmail)}`}
+                      variant="body2"
+                      color="text.secondary"
+                      underline="always"
+                    >
+                      {item.studentEmail}
+                    </MuiLink>
+                  ) : null}
+                </Stack>
+              ) : null}
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                 {item.whenLabel}
               </Typography>
-              {item.status === "scheduled" && role === "student" ? (
+              {item.status === "scheduled" && role === "admin" && (
+                <>
+                  <Divider sx={{ my: 2 }} />
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="inherit"
+                    disabled={pendingId === item.id}
+                    onClick={() => run(item.id, { status: "completed" })}
+                    sx={{ textTransform: "none" }}
+                  >
+                    Mark complete
+                  </Button>
+                </>
+              )}
+              {item.status === "scheduled" && role === "student" && (
                 <>
                   <Divider sx={{ my: 2 }} />
                   <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="inherit"
-                      disabled={pendingId === item.id}
-                      onClick={() => run(item.id, { status: "completed" })}
-                      sx={{ textTransform: "none" }}
-                    >
-                      Mark complete
-                    </Button>
                     <Button
                       size="small"
                       variant="outlined"
@@ -227,15 +256,37 @@ export function LearningDashboard({
                     </Button>
                   </Stack>
                 </>
-              ) : (
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                  No further actions required
-                </Typography>
               )}
             </Paper>
           ))
         )}
       </Stack>
+
+      {pageCount > 1 ? (
+        <Stack direction="row" spacing={1} sx={{ mt: 2, alignItems: "center", justifyContent: "space-between" }}>
+          {page > 1 ? (
+            <Button component={Link} href={pageHref(page - 1)} sx={{ textTransform: "none" }}>
+              Previous
+            </Button>
+          ) : (
+            <Button disabled sx={{ textTransform: "none" }}>
+              Previous
+            </Button>
+          )}
+          <Typography variant="body2" color="text.secondary">
+            Page {page} of {pageCount}
+          </Typography>
+          {page < pageCount ? (
+            <Button component={Link} href={pageHref(page + 1)} sx={{ textTransform: "none" }}>
+              Next
+            </Button>
+          ) : (
+            <Button disabled sx={{ textTransform: "none" }}>
+              Next
+            </Button>
+          )}
+        </Stack>
+      ) : null}
 
       {role === "student" ? (
         <Button

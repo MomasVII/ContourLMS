@@ -85,9 +85,9 @@ export const updateConsultationSchema = z
     reason: reasonSchema.optional(),
     scheduledAt: scheduledAtSchema.optional(),
     status: z
-      .enum(["cancelled", "completed"], {
+      .literal("cancelled", {
         errorMap: () => ({
-          message: 'Status can only be set to "cancelled" or "completed"',
+          message: 'Status can only be set to "cancelled"',
         }),
       })
       .optional(),
@@ -137,6 +137,12 @@ export const listConsultationsQuerySchema = z.object({
     .max(10_000, "Must be 10000 or fewer")
     .default(0),
 });
+
+export const completeConsultationSchema = z
+  .object({
+    status: z.literal("completed"),
+  })
+  .strict();
 
 export type BookConsultationInput = z.infer<typeof bookConsultationSchema>;
 export type UpdateConsultationInput = z.infer<typeof updateConsultationSchema>;
