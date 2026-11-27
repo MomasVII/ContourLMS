@@ -8,7 +8,7 @@ import { CONSULTATION_STATUSES, type Consultation, type ConsultationStatus } fro
 import { createClient } from "@/lib/supabase/server";
 import { hasEnvVars } from "@/lib/utils";
 
-const pageSize = 10;
+const pageSize = 4;
 
 function pageNumber(value: string | undefined) {
   const parsed = Number(value);
