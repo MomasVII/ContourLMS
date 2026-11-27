@@ -63,25 +63,20 @@ A short description of each function in this app.
 - `toConsultation` — Renames the database fields into the names the app uses.
 - `assertConsultationRow` — Checks that a database result really has the consultation fields.
 - `isStatus` — Checks that a status is scheduled, completed, or cancelled.
-- `formatWhen` — Writes a saved time as a Sydney date and time.
+- `formatWhen` — Writes a stored UTC time in the browser's local timezone.
 - `assertFuture` — Rejects a booking time that is not in the future.
 - `bookConsultationError` — Turns booking mistakes into a message naming the field.
 - `parseConsultationId` — Rejects an id that is not a proper consultation id.
-- `parseListQuery` — Reads and checks the page size, page start, and status from a list address.
 
 ## API routes
 
-- `GET` in `/api/consultations` — Returns the signed-in student's consultations.
 - `POST` in `/api/consultations` — Creates a booking for the signed-in student.
-- `GET` in `/api/consultations/[id]` — Returns one of the signed-in student's consultations.
 - `PATCH` in `/api/consultations/[id]` — Updates one consultation. Completing it requires an admin.
-- `GET` in `/api/admin/consultations` — Returns every consultation, for an admin only.
 - `GET` in `/auth/confirm` — Confirms an email link and sends the person into the app.
 
 ## Auth and errors
 
 - `requireUser` — Stops the request unless someone is signed in.
-- `requireAdmin` — Stops the request unless that person is an admin.
 - `getCurrentRole` — Reads whether the signed-in person is a student or an admin.
 - `isAppRole` — Checks that a role is student or admin.
 - `withErrorHandling` — Catches a failed request and turns it into an error response.
@@ -101,7 +96,7 @@ A short description of each function in this app.
 
 ## Database
 
-- `handle_new_user` — Creates a profile when someone signs up, including their name and email.
+- `handle_new_user` — Creates a profile when someone signs up, including their name, email, and admin choice.
 - `sync_profile_email` — Updates the profile when the login email changes.
 - `is_admin` — Reports whether the signed-in person is an admin.
 - `set_updated_at` — Stamps a consultation with the time it was last changed.
@@ -116,5 +111,5 @@ These only draw standard controls. They do not talk to the database.
 - `Label` — The caption for a form field.
 - `Badge` — A small status label.
 - `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent` — The box around a form.
-- `Checkbox` — A tick box.
+- `Checkbox` — The admin tick box on sign up.
 - `DropdownMenu` and its pieces — The menu used by the theme switch.

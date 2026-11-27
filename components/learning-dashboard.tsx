@@ -1,6 +1,7 @@
 "use client";
 
-import type { ConsultationStatus } from "@/lib/consultations/types";
+import type { ConsultationStatus, Roles } from "@/lib/consultations/types";
+import { formatWhen } from "@/lib/format";
 import axios from "axios";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
@@ -16,14 +17,12 @@ import Typography from "@mui/material/Typography";
 import MuiLink from "@mui/material/Link";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import type { Roles } from "@/lib/consultations/types";
+import { useEffect, useState } from "react";
 
 export type DashboardConsultation = {
   id: string;
   reason: string;
   scheduledAt: string;
-  whenLabel: string;
   status: ConsultationStatus;
   studentName?: string;
   studentEmail?: string;
@@ -34,6 +33,16 @@ const statusBorder = {
   completed: "success.main",
   cancelled: "error.main",
 } as const;
+
+function LocalWhen({ iso }: { iso: string }) {
+  const [label, setLabel] = useState("");
+
+  useEffect(() => {
+    setLabel(formatWhen(iso));
+  }, [iso]);
+
+  return label;
+}
 
 function toDatetimeLocal(iso: string) {
   const date = new Date(iso);
@@ -205,7 +214,7 @@ export function LearningDashboard({
                 </Stack>
               ) : null}
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                {item.whenLabel}
+                <LocalWhen iso={item.scheduledAt} />
               </Typography>
               {item.status === "scheduled" && role === "admin" && (
                 <>

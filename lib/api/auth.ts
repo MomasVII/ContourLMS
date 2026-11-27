@@ -56,14 +56,3 @@ export async function requireUser(): Promise<AuthedClient> {
 
   return { supabase, user: data.user };
 }
-
-export async function requireAdmin(): Promise<AuthedClient> {
-  const auth = await requireUser();
-  const role = await getCurrentRole(auth);
-
-  if (role !== "admin") {
-    throw new HttpError(403, "Admin access required");
-  }
-
-  return auth;
-}

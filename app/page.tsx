@@ -5,7 +5,6 @@ import { Suspense } from "react";
 import { LearningDashboard } from "@/components/learning-dashboard";
 import { countConsultations, listConsultations } from "@/lib/consultations/queries";
 import type { Consultation } from "@/lib/consultations/types";
-import { formatWhen } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { hasEnvVars } from "@/lib/utils";
 
@@ -137,7 +136,6 @@ async function HomeContent({
             id: item.id,
             reason: item.reason,
             scheduledAt: item.scheduledAt,
-            whenLabel: formatWhen(item.scheduledAt),
             status: item.status,
             studentName: students.get(item.studentId)?.name,
             studentEmail: students.get(item.studentId)?.email,

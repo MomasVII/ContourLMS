@@ -7,23 +7,12 @@ import {
 } from "@/lib/consultations/schema";
 import {
   completeConsultation,
-  getOwnConsultation,
   updateOwnConsultation,
 } from "@/lib/consultations/queries";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
-
-export function GET(_request: Request, context: RouteContext) {
-  return withErrorHandling(async () => {
-    const { supabase, user } = await requireUser();
-    const id = parseConsultationId((await context.params).id);
-    const consultation = await getOwnConsultation(supabase, user.id, id);
-
-    return json({ consultation });
-  });
-}
 
 export function PATCH(request: Request, context: RouteContext) {
   return withErrorHandling(async () => {
