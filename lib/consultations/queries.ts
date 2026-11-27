@@ -10,6 +10,7 @@ import {
   assertConsultationRow,
   toConsultation,
   type Consultation,
+  type ConsultationStatus,
 } from "./types";
 
 const CONSULTATION_COLUMNS =
@@ -58,7 +59,7 @@ function oneConsultation(data: unknown): Consultation {
 
 export async function listConsultations(
   supabase: SupabaseClient,
-  page: { limit: number; offset: number },
+  page: { limit: number; offset: number; status?: ConsultationStatus },
   scope: { studentId: string } | { all: true },
 ): Promise<{ consultations: Consultation[]; count: number }> {
   let request = supabase
@@ -72,6 +73,10 @@ export async function listConsultations(
 
   if ("studentId" in scope) {
     request = request.eq("student_id", scope.studentId);
+  }
+
+  if (page.status) {
+    request = request.eq("status", page.status);
   }
 
   const { data, error, count } = await request;

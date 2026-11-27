@@ -5,6 +5,7 @@ import { formatWhen } from "@/lib/format";
 import axios from "axios";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -76,8 +77,20 @@ async function updateConsultation(id: string, body: Record<string, string>) {
   }
 }
 
-function pageHref(page: number) {
-  return page <= 1 ? "/" : `/?page=${page}`;
+function listHref(page: number, status: ConsultationStatus | null) {
+  const params = new URLSearchParams();
+
+  if (status) {
+    params.set("status", status);
+  }
+
+  if (page > 1) {
+    params.set("page", String(page));
+  }
+
+  const query = params.toString();
+
+  return query ? `/?${query}` : "/";
 }
 
 export function LearningDashboard({
@@ -87,6 +100,7 @@ export function LearningDashboard({
   counts,
   page,
   pageCount,
+  status,
 }: {
   role: (typeof Roles)[number];
   firstName: string;
@@ -94,6 +108,7 @@ export function LearningDashboard({
   counts: { upcoming: number; completed: number; cancelled: number };
   page: number;
   pageCount: number;
+  status: ConsultationStatus | null;
 }) {
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -115,7 +130,7 @@ export function LearningDashboard({
       setReschedule(null);
       setRescheduleError(null);
       setCancelTarget(null);
-      router.refresh();
+      await router.refresh();
     } catch (error) {
       const text = error instanceof Error ? error.message : "Could not update the consultation";
 
@@ -144,20 +159,42 @@ export function LearningDashboard({
       </Stack>
 
       <Stack direction="row" sx={{ my: 3 }}>
-        {[
-          { value: counts.upcoming, label: "Upcoming" },
-          { value: counts.completed, label: "Completed" },
-          { value: counts.cancelled, label: "Cancelled" },
-        ].map((stat) => (
-          <Stack key={stat.label} spacing={0.5} sx={{ flex: 1, alignItems: "center" }}>
-            <Typography variant="h4" component="p">
-              {stat.value}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {stat.label}
-            </Typography>
-          </Stack>
-        ))}
+        {(
+          [
+            { status: "scheduled", value: counts.upcoming, label: "Upcoming", color: statusBorder.scheduled },
+            { status: "completed", value: counts.completed, label: "Completed", color: statusBorder.completed },
+            { status: "cancelled", value: counts.cancelled, label: "Cancelled", color: statusBorder.cancelled },
+          ] as const
+        ).map((stat) => {
+          const selected = status === stat.status;
+
+          return (
+            <MuiLink
+              key={stat.status}
+              component={Link}
+              href={listHref(1, selected ? null : stat.status)}
+              underline="none"
+              aria-current={selected ? "page" : undefined}
+              sx={{
+                flex: 1,
+                color: stat.color,
+                textAlign: "center",
+                fontWeight: selected ? 700 : 500,
+              }}
+            >
+              <Typography variant="h4" component="p" sx={{ color: "inherit", fontWeight: "inherit" }}>
+                {stat.value}
+              </Typography>
+              <Typography
+                variant="body2"
+                component="p"
+                sx={{ color: "inherit", fontWeight: "inherit", textDecoration: selected ? "underline" : "none" }}
+              >
+                {stat.label}
+              </Typography>
+            </MuiLink>
+          );
+        })}
       </Stack>
 
       <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
@@ -172,7 +209,15 @@ export function LearningDashboard({
 
       <Stack spacing={2}>
         {items.length === 0 ? (
-          <Typography color="text.secondary">No consultations yet.</Typography>
+          <Typography color="text.secondary">
+            {status === "scheduled"
+              ? "No upcoming consultations."
+              : status === "completed"
+                ? "No completed consultations."
+                : status === "cancelled"
+                  ? "No cancelled consultations."
+                  : "No consultations yet."}
+          </Typography>
         ) : (
           items.map((item) => (
             <Paper
@@ -219,16 +264,19 @@ export function LearningDashboard({
               {item.status === "scheduled" && role === "admin" && (
                 <>
                   <Divider sx={{ my: 2 }} />
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="inherit"
-                    disabled={pendingId === item.id}
-                    onClick={() => run(item.id, { status: "completed" })}
-                    sx={{ textTransform: "none" }}
-                  >
-                    Mark complete
-                  </Button>
+                  {pendingId === item.id ? (
+                    <CircularProgress size={22} aria-label="Marking complete" />
+                  ) : (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="inherit"
+                      onClick={() => run(item.id, { status: "completed" })}
+                      sx={{ textTransform: "none" }}
+                    >
+                      Mark complete
+                    </Button>
+                  )}
                 </>
               )}
               {item.status === "scheduled" && role === "student" && (
@@ -274,7 +322,7 @@ export function LearningDashboard({
       {pageCount > 1 ? (
         <Stack direction="row" spacing={1} sx={{ mt: 2, alignItems: "center", justifyContent: "space-between" }}>
           {page > 1 ? (
-            <Button component={Link} href={pageHref(page - 1)} sx={{ textTransform: "none" }}>
+            <Button component={Link} href={listHref(page - 1, status)} sx={{ textTransform: "none" }}>
               Previous
             </Button>
           ) : (
@@ -286,7 +334,7 @@ export function LearningDashboard({
             Page {page} of {pageCount}
           </Typography>
           {page < pageCount ? (
-            <Button component={Link} href={pageHref(page + 1)} sx={{ textTransform: "none" }}>
+            <Button component={Link} href={listHref(page + 1, status)} sx={{ textTransform: "none" }}>
               Next
             </Button>
           ) : (

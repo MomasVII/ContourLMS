@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 import { LearningDashboard } from "@/components/learning-dashboard";
 import { countConsultations, listConsultations } from "@/lib/consultations/queries";
-import type { Consultation } from "@/lib/consultations/types";
+import { CONSULTATION_STATUSES, type Consultation, type ConsultationStatus } from "@/lib/consultations/types";
 import { createClient } from "@/lib/supabase/server";
 import { hasEnvVars } from "@/lib/utils";
 
@@ -20,10 +20,18 @@ function pageNumber(value: string | undefined) {
   return parsed;
 }
 
+function statusFilter(value: string | undefined): ConsultationStatus | null {
+  if (value && (CONSULTATION_STATUSES as readonly string[]).includes(value)) {
+    return value as ConsultationStatus;
+  }
+
+  return null;
+}
+
 export default function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; status?: string }>;
 }) {
   return (
     <Suspense fallback={<main className="flex-1" />}>
@@ -35,7 +43,7 @@ export default function Home({
 async function HomeContent({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; status?: string }>;
 }) {
   if (!hasEnvVars) {
     return <main className="flex-1" />;
@@ -67,15 +75,21 @@ async function HomeContent({
   let page = 1;
   let pageCount = 0;
   let counts = { scheduled: 0, completed: 0, cancelled: 0 };
+  let status: ConsultationStatus | null = null;
   const students = new Map<string, { name: string; email: string }>();
 
   try {
     const params = await searchParams;
     const scope = profile.role === "admin" ? { all: true as const } : { studentId: data.user.id };
     page = pageNumber(params.page);
+    status = statusFilter(params.status);
 
     const [firstPage, statusCounts] = await Promise.all([
-      listConsultations(supabase, { limit: pageSize, offset: (page - 1) * pageSize }, scope),
+      listConsultations(
+        supabase,
+        { limit: pageSize, offset: (page - 1) * pageSize, ...(status ? { status } : {}) },
+        scope,
+      ),
       countConsultations(supabase, scope),
     ]);
     counts = statusCounts;
@@ -87,7 +101,7 @@ async function HomeContent({
       page = pageCount;
       result = await listConsultations(
         supabase,
-        { limit: pageSize, offset: (page - 1) * pageSize },
+        { limit: pageSize, offset: (page - 1) * pageSize, ...(status ? { status } : {}) },
         scope,
       );
     }
@@ -147,6 +161,7 @@ async function HomeContent({
           }}
           page={page}
           pageCount={pageCount}
+          status={status}
         />
       )}
     </Box>
