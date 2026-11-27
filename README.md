@@ -34,6 +34,22 @@ A small consultations app. Students book, reschedule, and cancel their own consu
 
 5. The sign-up form has an Admin checkbox so a test account can be created without a manual SQL update. Leave it unticked for a student. Local auth mail is caught by the local stack, so confirmation links show up in the Supabase inbox from `supabase status`.
 
+## Deployment
+
+The live app is at [https://contour-lms-wine.vercel.app/](https://contour-lms-wine.vercel.app/).
+
+Three services stay connected:
+
+- GitHub holds the code at [github.com/MomasVII/ContourLMS](https://github.com/MomasVII/ContourLMS).
+- Vercel builds that repository and serves the site at the address above.
+- Supabase is the hosted database and login service, project `gzqvudvkldunviseczkk` (`https://gzqvudvkldunviseczkk.supabase.co`).
+
+Vercel does not read the local `.env.local`. The project settings there need `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` for that hosted project. A new deploy is required after those values change, because Next includes them at build time.
+
+Supabase Auth must allow the live site. The Site URL is `https://contour-lms-wine.vercel.app`, and the redirect list includes `https://contour-lms-wine.vercel.app/**`.
+
+The hosted database gets its tables from the same migration files, with `supabase db push --remote` after `supabase link --project-ref gzqvudvkldunviseczkk`. That updates the schema only. Local users and consultations stay on the local stack.
+
 ## Justifications and assumptions
 
 - Students cannot mark a consultation complete. Admins keep that control because a student cannot be trusted to close their own consultation.
