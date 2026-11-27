@@ -1,6 +1,7 @@
-import { json, readJsonBody, withErrorHandling } from "@/lib/api/http";
+import { HttpError, json, readJsonBody, withErrorHandling } from "@/lib/api/http";
 import { requireUser } from "@/lib/api/auth";
 import {
+  bookConsultationError,
   bookConsultationSchema,
   parseListQuery,
 } from "@/lib/consultations/schema";
@@ -29,8 +30,14 @@ export function GET(request: Request) {
 export function POST(request: Request) {
   return withErrorHandling(async () => {
     const { supabase, user } = await requireUser();
-    const input = bookConsultationSchema.parse(await readJsonBody(request));
-    const consultation = await createConsultation(supabase, user.id, input);
+    const parsed = bookConsultationSchema.safeParse(await readJsonBody(request));
+
+    if (!parsed.success) {
+      const details = bookConsultationError(parsed.error);
+      throw new HttpError(400, details.message, details.fields);
+    }
+
+    const consultation = await createConsultation(supabase, user.id, parsed.data);
 
     return json({ consultation }, 201, {
       Location: `/api/consultations/${consultation.id}`,

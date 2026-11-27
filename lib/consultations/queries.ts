@@ -14,7 +14,7 @@ import {
 } from "./types";
 
 const CONSULTATION_COLUMNS =
-  "id, student_id, first_name, last_name, reason, scheduled_at, status, created_at, updated_at";
+  "id, student_id, reason, scheduled_at, status, created_at, updated_at";
 
 type DbError = {
   code?: string;
@@ -127,8 +127,6 @@ export async function createConsultation(
     .from("consultations")
     .insert({
       student_id: studentId,
-      first_name: input.firstName,
-      last_name: input.lastName,
       reason: input.reason,
       scheduled_at: input.scheduledAt,
     })
@@ -157,7 +155,7 @@ export async function updateOwnConsultation(
   const patch: {
     reason?: string;
     scheduled_at?: string;
-    status?: "cancelled";
+    status?: "cancelled" | "completed";
   } = {};
 
   if (input.reason !== undefined) {
