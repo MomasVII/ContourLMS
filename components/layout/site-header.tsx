@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { AuthButton } from "@/components/auth-button";
-import { EnvVarWarning } from "@/components/env-var-warning";
-import { ThemeSwitcher } from "@/components/theme-switcher";
+import { AuthButton } from "@/components/auth/auth-button";
+import { EnvVarWarning } from "@/components/layout/env-var-warning";
+import { ThemeSwitcher } from "@/components/layout/theme-switcher";
 import { hasEnvVars } from "@/lib/utils";
 
 export function SiteHeader() {
