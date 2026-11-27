@@ -11,7 +11,7 @@ export function SiteHeader() {
     <header className="w-full border-b">
       <div className="flex h-16 w-full items-center justify-between px-5">
         <Link href="/" className="font-semibold">
-          Consultations
+          LMS
         </Link>
         <div className="flex items-center gap-3">
           <ThemeSwitcher />
