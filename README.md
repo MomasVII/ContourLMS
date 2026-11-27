@@ -44,10 +44,6 @@ Three services stay connected:
 - Vercel builds that repository and serves the site at the address above.
 - Supabase is the hosted database and login service, project `gzqvudvkldunviseczkk` (`https://gzqvudvkldunviseczkk.supabase.co`).
 
-Vercel does not read the local `.env.local`. The project settings there need `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` for that hosted project. A new deploy is required after those values change, because Next includes them at build time.
-
-Supabase Auth must allow the live site. The Site URL is `https://contour-lms-wine.vercel.app`, and the redirect list includes `https://contour-lms-wine.vercel.app/**`.
-
 The hosted database gets its tables from the same migration files, with `supabase db push --remote` after `supabase link --project-ref gzqvudvkldunviseczkk`. That updates the schema only. Local users and consultations stay on the local stack.
 
 ## Justifications and assumptions
