@@ -4,7 +4,6 @@ import { HttpError } from "@/lib/api/http";
 
 import type {
   BookConsultationInput,
-  ListConsultationsQuery,
   UpdateConsultationInput,
 } from "./schema";
 import {
@@ -59,7 +58,7 @@ function oneConsultation(data: unknown): Consultation {
 
 export async function listConsultations(
   supabase: SupabaseClient,
-  query: ListConsultationsQuery,
+  page: { limit: number; offset: number },
   scope: { studentId: string } | { all: true },
 ): Promise<{ consultations: Consultation[]; count: number }> {
   let request = supabase
@@ -69,14 +68,10 @@ export async function listConsultations(
     .order("status", { ascending: false })
     .order("scheduled_at", { ascending: true })
     .order("id", { ascending: true })
-    .range(query.offset, query.offset + query.limit - 1);
+    .range(page.offset, page.offset + page.limit - 1);
 
   if ("studentId" in scope) {
     request = request.eq("student_id", scope.studentId);
-  }
-
-  if (query.status) {
-    request = request.eq("status", query.status);
   }
 
   const { data, error, count } = await request;

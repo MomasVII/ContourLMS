@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
@@ -25,6 +26,7 @@ export function SignUpForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
+  const [asAdmin, setAsAdmin] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -50,6 +52,7 @@ export function SignUpForm({
           data: {
             first_name: firstName.trim(),
             last_name: lastName.trim(),
+            ...(asAdmin ? { role: "admin" } : {}),
           },
         },
       });
@@ -128,6 +131,14 @@ export function SignUpForm({
                   value={repeatPassword}
                   onChange={(e) => setRepeatPassword(e.target.value)}
                 />
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="admin"
+                  checked={asAdmin}
+                  onCheckedChange={(checked) => setAsAdmin(checked === true)}
+                />
+                <Label htmlFor="admin">Admin</Label>
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>

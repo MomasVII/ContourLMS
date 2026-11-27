@@ -2,8 +2,6 @@ import { z } from "zod";
 
 import { HttpError } from "@/lib/api/http";
 
-import { CONSULTATION_STATUSES } from "./types";
-
 const reasonControlChars = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/;
 
 const reasonSchema = z
@@ -116,28 +114,6 @@ export const updateConsultationSchema = z
     }
   });
 
-export const listConsultationsQuerySchema = z.object({
-  status: z
-    .enum(CONSULTATION_STATUSES, {
-      errorMap: () => ({
-        message: "Status must be scheduled, completed, or cancelled",
-      }),
-    })
-    .optional(),
-  limit: z.coerce
-    .number({ invalid_type_error: "Must be a number" })
-    .int("Must be a whole number")
-    .min(1, "Must be at least 1")
-    .max(100, "Must be 100 or fewer")
-    .default(50),
-  offset: z.coerce
-    .number({ invalid_type_error: "Must be a number" })
-    .int("Must be a whole number")
-    .min(0, "Must be 0 or greater")
-    .max(10_000, "Must be 10000 or fewer")
-    .default(0),
-});
-
 export const completeConsultationSchema = z
   .object({
     status: z.literal("completed"),
@@ -146,7 +122,6 @@ export const completeConsultationSchema = z
 
 export type BookConsultationInput = z.infer<typeof bookConsultationSchema>;
 export type UpdateConsultationInput = z.infer<typeof updateConsultationSchema>;
-export type ListConsultationsQuery = z.infer<typeof listConsultationsQuerySchema>;
 
 const uuidSchema = z.string().uuid();
 
@@ -156,16 +131,4 @@ export function parseConsultationId(id: string): string {
   }
 
   return id;
-}
-
-export function parseListQuery(url: URL): ListConsultationsQuery {
-  const status = url.searchParams.get("status");
-  const limit = url.searchParams.get("limit");
-  const offset = url.searchParams.get("offset");
-
-  return listConsultationsQuerySchema.parse({
-    ...(status !== null ? { status } : {}),
-    ...(limit !== null ? { limit } : {}),
-    ...(offset !== null ? { offset } : {}),
-  });
 }
