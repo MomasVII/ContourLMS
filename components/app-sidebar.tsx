@@ -14,9 +14,5 @@ export async function AppSidebar() {
     return null;
   }
 
-  return (
-    <aside className="w-56 shrink-0 border-r">
-      <SidebarNav role={role} />
-    </aside>
-  );
+  return <SidebarNav role={role} />;
 }

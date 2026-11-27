@@ -2,7 +2,7 @@
 -- Cancel sets status to 'cancelled'. Rows stay so the history is kept.
 -- A student can change their own consultation only while it is 'scheduled'.
 -- Admins can read every consultation and have no write policy.
--- The name on a booking is whatever was typed into the form.
+-- A booking is tied to the student. Names live on the profile, not the consultation.
 -- Bookings have to be in the future, and a student cannot have two scheduled
 -- consultations at the same time.
 --
@@ -25,12 +25,6 @@ create table public.profiles (
 create table public.consultations (
   id uuid primary key default gen_random_uuid(),
   student_id uuid not null references public.profiles(id) on delete cascade,
-  first_name text not null
-    constraint consultations_first_name_valid
-    check (char_length(btrim(first_name)) between 1 and 100),
-  last_name text not null
-    constraint consultations_last_name_valid
-    check (char_length(btrim(last_name)) between 1 and 100),
   reason text not null
     constraint consultations_reason_valid
     check (char_length(btrim(reason)) between 1 and 1000),
@@ -153,9 +147,9 @@ grant select on public.profiles to authenticated;
 grant update (first_name, last_name) on public.profiles to authenticated;
 
 -- id, status, created_at, and updated_at are filled in by defaults and triggers.
--- student_id and the booking names stay as they were on insert.
+-- student_id stays as it was on insert.
 grant select on public.consultations to authenticated;
-grant insert (student_id, first_name, last_name, reason, scheduled_at)
+grant insert (student_id, reason, scheduled_at)
   on public.consultations to authenticated;
 grant update (reason, scheduled_at, status)
   on public.consultations to authenticated;

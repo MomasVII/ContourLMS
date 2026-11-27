@@ -4,13 +4,16 @@ export const CONSULTATION_STATUSES = [
   "cancelled",
 ] as const;
 
+export const Roles = [
+  "student",
+  "admin",
+] as const;
+
 export type ConsultationStatus = (typeof CONSULTATION_STATUSES)[number];
 
 export type Consultation = {
   id: string;
   studentId: string;
-  firstName: string;
-  lastName: string;
   reason: string;
   scheduledAt: string;
   status: ConsultationStatus;
@@ -21,8 +24,6 @@ export type Consultation = {
 export type ConsultationRow = {
   id: string;
   student_id: string;
-  first_name: string;
-  last_name: string;
   reason: string;
   scheduled_at: string;
   status: string;
@@ -42,8 +43,6 @@ export function toConsultation(row: ConsultationRow): Consultation {
   return {
     id: row.id,
     studentId: row.student_id,
-    firstName: row.first_name,
-    lastName: row.last_name,
     reason: row.reason,
     scheduledAt: row.scheduled_at,
     status: row.status,
@@ -61,8 +60,6 @@ export function assertConsultationRow(value: unknown): ConsultationRow {
   const required = [
     "id",
     "student_id",
-    "first_name",
-    "last_name",
     "reason",
     "scheduled_at",
     "status",
@@ -79,8 +76,6 @@ export function assertConsultationRow(value: unknown): ConsultationRow {
   return {
     id: row.id as string,
     student_id: row.student_id as string,
-    first_name: row.first_name as string,
-    last_name: row.last_name as string,
     reason: row.reason as string,
     scheduled_at: row.scheduled_at as string,
     status: row.status as string,
