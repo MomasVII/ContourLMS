@@ -93,6 +93,7 @@ A short description of each function in this app.
 - `updateSession` — Refreshes the sign-in cookie and sends logged-out visitors to the login page.
 - `proxy` — Runs that session check on each page request.
 - `cn` — Joins CSS class names and drops the ones that clash.
+- `passwordIssue` — Rejects a password shorter than 8 characters, or one missing a number, a symbol, or both letter cases.
 
 ## Database
 

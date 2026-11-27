@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
-import { AppSidebar } from "@/components/app-sidebar";
-import { MuiProvider } from "@/components/mui-provider";
-import { SiteHeader } from "@/components/site-header";
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { MuiProvider } from "@/components/layout/mui-provider";
+import { SiteHeader } from "@/components/layout/site-header";
 import { Suspense } from "react";
 
 const defaultUrl = process.env.VERCEL_URL

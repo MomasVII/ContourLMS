@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { Suspense } from "react";
 
-import { LearningDashboard } from "@/components/learning-dashboard";
+import { LearningDashboard } from "@/components/dashboard/learning-dashboard";
 import { countConsultations, listConsultations } from "@/lib/consultations/queries";
 import { CONSULTATION_STATUSES, type Consultation, type ConsultationStatus } from "@/lib/consultations/types";
 import { createClient } from "@/lib/supabase/server";
